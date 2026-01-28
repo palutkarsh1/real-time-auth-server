@@ -20,8 +20,22 @@ app.use(cookieParser());
 
 // 3. Allow Frontend to call this Backend
 // credentials: true IS REQUIRED for cookies to work!
+// Support multiple origins separated by comma (for dev + prod)
+const allowedOrigins = CLIENT_URL.includes(',') 
+    ? CLIENT_URL.split(',').map(url => url.trim())
+    : [CLIENT_URL];
+
 app.use(cors({
-    origin: CLIENT_URL,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -197,7 +211,13 @@ app.post('/sessions/revoke', auth, (req, res) => {
     );
 });
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// Export app for Vercel serverless functions
+module.exports = app;
+
+// Start Server (only in local development, not on Vercel)
+// Vercel will use the api/index.js wrapper instead
+if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}

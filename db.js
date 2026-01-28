@@ -1,9 +1,19 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 // 1. Setup the path where the database file will be saved
-// __dirname means "the directory where this script is running"
-const dbPath = path.resolve(__dirname, 'database.sqlite');
+// For Vercel: Use /tmp directory (only writable location in serverless)
+// For local: Use project directory
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+const dbPath = isVercel 
+    ? path.resolve('/tmp', 'database.sqlite')
+    : path.resolve(__dirname, 'database.sqlite');
+
+// Ensure /tmp directory exists (for Vercel)
+if (isVercel && !fs.existsSync('/tmp')) {
+    fs.mkdirSync('/tmp', { recursive: true });
+}
 
 // 2. Connect to the SQLite database
 // If the file doesn't exist, it will be created automatically.
