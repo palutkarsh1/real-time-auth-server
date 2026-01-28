@@ -1,3 +1,4 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const db = require('./db');
 const bcrypt = require('bcrypt'); // Used for hashing passwords (security)
@@ -6,7 +7,8 @@ const cors = require('cors'); // Allows frontend to talk to backend
 const cookieParser = require('cookie-parser'); // Reads cookies from browser
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 // --- MIDDLEWARE ---
 
@@ -16,10 +18,10 @@ app.use(express.json());
 // 2. Allow checking cookies
 app.use(cookieParser());
 
-// 3. Allow Frontend (localhost:5173) to call this Backend
+// 3. Allow Frontend to call this Backend
 // credentials: true IS REQUIRED for cookies to work!
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: CLIENT_URL,
     credentials: true
 }));
 
